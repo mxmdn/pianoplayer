@@ -6,3 +6,5 @@ __status__ = "dev"
 __website__ = "https://github.com/marcomusy/pianoplayer"
 __license__ = "MIT"
 
+from pianoplayer.hand import Hand
+from pianoplayer.scorereader import reader
