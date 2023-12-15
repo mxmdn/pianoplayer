@@ -1,34 +1,34 @@
 """
 TARGETS
 
-        S     E  E  E  E  E  E  E  S  S
-     |-----|-----------------------------|
- --- |  E ---(E) F     F  G  F  E     E --
-| R  |  C ---(C) D <r> D  D  D  C  D  C --
-| H  |  G ---(G) A     A  B  A  G     G --
- --- |-----|-----------------------------|
-     |     |                             |
- --- |-----|-----------------------------|
-| L  |     |  A     A     A     A        |
-| H  | <r> |  A <r> A <r> A <r> A <r>    |
- --- |-----|-----------------------------|
+0             S     E  E  E  E  E  E  E  S  S
+1          |-----|-----------------------------|
+2      --- |  E ---(E) F     F  G  F  E     E --
+3     | R  |  C ---(C) D <r> D  D  D  C  D  C --
+4     | H  |  G ---(G) A     A  B  A  G     G --
+5      --- |-----|-----------------------------|
+6          |     |                             |
+7      --- |-----|-----------------------------|
+8     | L  |     |  A     A     A     A        |
+9     | H  | <r> |  A <r> A <r> A <r> A <r>    |
+10     --- |-----|-----------------------------|
 
-          S     E  E  E  E  E  E  E  S  S
-       |-----|-----------------------------|
- ---  p|  E ---(E)          G     E     E --
-| R   r|     |     F     F     F           |
-|     M|  C ---(C)   <r>          C  D  C --
-| H   I|     |     D     D  D  D           |
- ---  T|  G ---(G) A     A  B  A  G     G --
-       |-----|-----------------------------|
-       |     |                             |
-       |-----|-----------------------------|
- ---  T|     |  A     A     A     A        |
-| L   I|     |                             |
-|     M| <r> |    <r>   <r>   <r>   <r>    |
-| H   r|     |                             |
- ---  p|     |  A     A     A     A        |
-       |-----|-----------------------------|
+0               S     E  E  E  E  E  E  E  S  S
+1            |-----|-----------------------------|
+2      ---  p|  E ---(E)          G     E     E --
+3     | R   r|     |     F     F     F           |
+4     |     M|  C ---(C)   <r>          C  D  C --
+5     | H   I|     |     D     D  D  D           |
+6      ---  T|  G ---(G) A     A  B  A  G     G --
+7            |-----|-----------------------------|
+8            |     |                             |
+9            |-----|-----------------------------|
+10     ---  T|     |  A     A     A     A        |
+11    | L   I|     |                             |
+12    |     M| <r> |    <r>   <r>   <r>   <r>    |
+13    | H   r|     |                             |
+14     ---  p|     |  A     A     A     A        |
+15           |-----|-----------------------------|
 
 DURATIONS
 
@@ -46,6 +46,7 @@ DURATIONS
 
 """
 from collections import OrderedDict
+from notes import Note
 
 NOTES_CYCLE_FLATS = ["c", "db", "d", "eb", "e", "f", "gb", "g", "ab", "a", "bb", "b"]
 NOTES_CYCLE_SHARPS = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"]
@@ -153,9 +154,9 @@ def draw_measure(d_measure):
     for finger_notes in d_measure.values():
         for d in finger_notes:
             if d["t_start"] in d_notes_by_t_start:
-                d_notes_by_t_start.append(d)
+                d_notes_by_t_start[d["t_start"]].append(d)
             else:
-                d_notes_by_t_start = [d]
+                d_notes_by_t_start[d["t_start"]] = [d]
 
     # Compute all separate distances size factors
     BASE_LEN = 1
@@ -208,19 +209,86 @@ def draw_measure(d_measure):
     #    import pdb; pdb.set_trace()
 
     # Draw beginning
+    lines_out = ["|--"]*7 + ["|  "] + ["|--"]*7
+    def print_lines(lines):
+        print("\n".join(lines))
 
+    def finger_to_line(finger):
+        if int(finger) > 0:
+            return int(finger) + 1
 
+        return -1 + int(finger)
 
+    def uniformize(lines):
+        print("\tuniformizing")
+        line_max = max([len(l) for l in lines])
+        for i in range(len(lines)):
+            if i == 7:
+                character = " "
+            else:
+                character = "-"
+
+            if len(lines[i]) < line_max:
+                lines[i] += character * (line_max - len(lines[i]))
+
+    def add_notes(lines, l_notes):
+        print("\tadding notes")
+        for note in l_notes:
+            line = finger_to_line(note["finger"])
+            s_note = Note(int(note["pitch"])).name_octave()
+            lines[line] += s_note
+
+        uniformize(lines)
+
+    def add_end_measure(lines):
+        for i in range(len(lines)):
+            lines[i] += "|"
+
+    def add_space(lines, length):
+        print("\tadding space in")
+        print_lines(lines_out)
+        #lines[0] += "-" * length
+        #lines[6] += "-" * length
+        #lines[7] += " " * length
+        #lines[-1] += "-" * length
+        #lines[-7] += "-" * length
+
+        lines[0] += "-" * length
+        lines[6] += "-" * length
+        lines[7] += " " * length
+        lines[-1] += "-" * length
+        lines[-7] += "-" * length
+        uniformize(lines)
+        print("\tadding space out")
+        print_lines(lines_out)
+
+    for tstart, length in d_tstart_to_len.items():
+        print(f"tstart {tstart}")
+        print(f"length {length}")
+        print_lines(lines_out)
+        add_notes(lines_out, d_notes_by_t_start[tstart])
+        print("***")
+        add_space(lines_out, length)
+        print("***")
+        print_lines(lines_out)
+
+    add_end_measure(lines_out)
     # Loop over all notes/chords
 
     #
+    return lines_out
 
 
 def main(filename):
     print(filename)
     d_info = parse_txt_file(filename)
+    measures_lines = []
     for d_meas in d_info.values():
-        draw_measure(d_meas)
+        measures_lines.append(draw_measure(d_meas))
+
+    for i, l in enumerate(measures_lines):
+        print(f"\nMEASURE {i}")
+        print("\n".join(l))
 
 
 if __name__ == "__main__":
