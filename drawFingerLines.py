@@ -209,21 +209,25 @@ def draw_measure(d_measure):
     #    import pdb; pdb.set_trace()
 
     # Draw beginning
-    lines_out = ["|--"]*7 + ["|  "] + ["|--"]*7
+    #lines_out = ["|--"]*7 + ["|  "] + ["|--"]*7
+    n = 5
+    lines_out = ["|--"]*n + ["|  "] + ["|--"]*n
     def print_lines(lines):
         print("\n".join(lines))
 
     def finger_to_line(finger):
         if int(finger) > 0:
-            return int(finger) + 1
+            return int(finger) - 1
+            #return int(finger) + 1
 
-        return -1 + int(finger)
+        return int(finger)
 
     def uniformize(lines):
         print("\tuniformizing")
         line_max = max([len(l) for l in lines])
         for i in range(len(lines)):
-            if i == 7:
+            #if i == 7:
+            if i == 5:
                 character = " "
             else:
                 character = "-"
@@ -236,7 +240,7 @@ def draw_measure(d_measure):
         for note in l_notes:
             line = finger_to_line(note["finger"])
             s_note = Note(int(note["pitch"])).name_octave()
-            lines[line] += s_note
+            lines[line] += s_note.upper()
 
         uniformize(lines)
 
@@ -253,11 +257,7 @@ def draw_measure(d_measure):
         #lines[-1] += "-" * length
         #lines[-7] += "-" * length
 
-        lines[0] += "-" * length
-        lines[6] += "-" * length
-        lines[7] += " " * length
-        lines[-1] += "-" * length
-        lines[-7] += "-" * length
+        lines[5] += " " * length
         uniformize(lines)
         print("\tadding space out")
         print_lines(lines_out)
